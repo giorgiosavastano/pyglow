@@ -29,14 +29,21 @@ index (apf107.dat) files. IRI 2016 initialization is required only
 once per session.
 """
 __INIT_IRI16 = False
-__version__ = '1.0'
+__version__ = '1.2'
 
 DIR_FILE = os.path.dirname(__file__)
 
 
 class Point(object):
 
-    def __init__(self, dn, lat, lon, alt, user_ind=False):
+    def __init__(
+        self,
+        dn,
+        lat,
+        lon,
+        alt,
+        user_ind=False,
+    ):
         """
         An instance of Point is the fundamental data object
         for running each climatological model.
@@ -44,13 +51,13 @@ class Point(object):
         Instantation of a Point initializes member variables,
         and also grabs the corresponding geophysical indices.
 
-        :param dn: datetime.datetime object 
+        :param dn: datetime.datetime object
         :param lat: Latitude [degrees]
         :param lon: Longitude [degrees]
         :param alt: Altitude [km]
         :param user_ind: (optional) Boolean switch to calculate
                          geophysical indices. If True, then it
-                         is up to the user to assign geophysical 
+                         is up to the user to assign geophysical
                          indices to the Point
         """
 
@@ -78,6 +85,7 @@ class Point(object):
         self.ap       = nan
         self.f107     = nan
         self.f107a    = nan
+        self.f107p    = nan # previous day's F10.7
         self.kp_daily = nan
         self.ap_daily = nan
         self.apmsis   = [nan,]*7
@@ -122,7 +130,10 @@ class Point(object):
         self.ag6300 = nan
         self.ag7774 = nan
 
-        if not user_ind:
+        # Flag for user indices:
+        self.user_ind = user_ind
+
+        if not self.user_ind:
             # Call the indice models:
             self.get_indices()
             self.apmsis = get_apmsis(self.dn)
@@ -132,7 +143,7 @@ class Point(object):
         """
         Retreives geophysical indices.
         """
-        self.kp, self.ap, self.f107, self.f107a, \
+        self.kp, self.ap, self.f107, self.f107a, self.f107p, \
                 self.kp_daily, self.ap_daily, self.dst, self.ae  \
                         = get_kpap(self.dn)
         return self
@@ -236,11 +247,36 @@ class Point(object):
             jf[8] = 0
             oarr[1] = hmF2
 
+        if self.user_ind:
+            # Set jf(25) switch to false (in Fortran)
+            #   which is jf[24] in Python
+            jf[24] = 0
+
+            # Set jf(32) switch to false (in Fortran)
+            #   which is jf[31] in Python
+            jf[31] = 0
+
+            # Store user indice for F10.7 in oarr:
+            oarr[40] = self.f107
+
+            # Store user index for F10.7 81 day average in oarr:
+            oarr[45] = self.f107a
+
+            # Reference:
+            # https://github.com/timduly4/pyglow/issues/34#issuecomment-340645358
+
+        # Get current directory:
         my_pwd = os.getcwd()
 
-        iri_data_path = os.path.join(DIR_FILE, iri_data_stub)
+        # IRI data path.  We need to change directories
+        # into where the IRI data are located in order
+        # to run IRI:
+        iri_data_path = os.path.join(
+            DIR_FILE,
+            iri_data_stub,
+        )
         if debug:
-            print("Changing directory to {}\n".format(iri_data_path))
+            print("Changing directory to {}".format(iri_data_path))
 
         os.chdir(iri_data_path)
         init_iri()
@@ -316,7 +352,7 @@ class Point(object):
             np.mod(self.lon,360),
             self.slt_hour,
             self.f107a,
-            self.f107,
+            self.f107p,
             self.apmsis,
             48,
         )
@@ -746,7 +782,7 @@ def update_kpap(years=None):
     '''
 
     # Load all data up until today
-    if years is None: 
+    if years is None:
         years = range(1932, date.today().year + 1)[::-1] # reverse
 
     pyglow_dir = os.path.join(DIR_FILE, "kpap/")
@@ -910,5 +946,3 @@ def update_indices(years=None):
     update_ae(years=years)
 
     return
-
-

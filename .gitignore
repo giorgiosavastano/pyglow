@@ -1,5 +1,8 @@
+*.pyc
+mtime_table.pkl
+geophysical_indices.npy
 build/
-pyglow/models/
+pyglow/models/dl_models/
 pyglow/ae/
 pyglow/dst/
 pyglow/kpap/

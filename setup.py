@@ -4,10 +4,9 @@ from numpy.distutils.core import setup
 
 setup(
     name='pyglow',
-    version='0.6',
     url='github.com/timduly4/pyglow',
     author='Timothy M. Duly',
-    author_email='duly2@illinois.edu',
+    author_email='timduly4@gmail.com',
     packages=['pyglow', ],
     data_files=[
         ('pyglow_trash',['pyglow/models/Makefile']),
@@ -34,6 +33,7 @@ setup(
         ('pyglow_trash',['pyglow/models/f2py/iri12/delete_iriflip_comments.py']),
         ('pyglow_trash',['pyglow/models/f2py/iri12/Makefile']),
         ('pyglow_trash',['pyglow/models/f2py/iri12/sig.patch']),
+        ('pyglow_trash',['pyglow/models/f2py/iri12/iridreg.patch']),
         ('pyglow_trash',['pyglow/models/f2py/msis/Makefile']),
         ('pyglow_trash',['pyglow/models/f2py/msis/nrlmsise00_sub.patch']),
         ('pyglow_trash',['pyglow/models/f2py/msis/sig.patch']),
@@ -293,4 +293,3 @@ setup(
 )
 
 print("... All done!")
-
